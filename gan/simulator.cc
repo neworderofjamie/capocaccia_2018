@@ -1,4 +1,5 @@
 // GeNN robotics includes
+#include "analogue_csv_recorder.h"
 #include "spike_csv_recorder.h"
 
 // Auto-generated model code
@@ -18,10 +19,23 @@ void setInhibitoryWeight(unsigned int preIdx, unsigned int postIdx, scalar weigh
 {
     gInhibitorySyn[(preIdx * 4) + postIdx] = weight;
 }
+
+void setBlueInput(scalar value)
+{
+    iExtNeurons[0] = -7.13f * value * 0.003f * 100000.0f;
+}
+
+void setRedInput(scalar value)
+{
+    iExtNeurons[1] = 4.58f * value * 0.003f * 100000.0f;
+}
 }   // Anonymous namespace
 
 int main()
 {
+    const scalar leftValue = 0.55f;
+    const scalar rightValue = 0.45f;
+    
     allocateMem();
     initialize();
   
@@ -38,21 +52,30 @@ int main()
   
     // Open CSV output files
     SpikeCSVRecorder spikes("spikes.csv", glbSpkCntNeurons, glbSpkNeurons);
+    AnalogueCSVRecorder<scalar> voltages("voltages.csv", VNeurons, 4, "Membrane voltage [mV]");
 
     // Loop through timesteps
-    for(unsigned int i = 0; i < 10000; i++)
-    {
+    while(t < 200.0f) {
+        // Apply some stimuli
+        if(t > 10.0f && t < 60.0f) {
+            setRedInput(leftValue);
+            setBlueInput(0.0f);
+        }
+        else if(t > 70.0f && t < 120.0f) {
+            setRedInput(0.0f);
+            setBlueInput(leftValue);
+        }
+        else {
+            setRedInput(0.0f);
+            setBlueInput(0.0f);
+        }
+        
         // Simulate
-#ifndef CPU_ONLY
-        stepTimeGPU();
-
-        pullECurrentSpikesFromDevice();
-        //pullIEStateFromDevice();
-#else
         stepTimeCPU();
-#endif
 
+        // Record spikes and voltage
         spikes.record(t);
+        voltages.record(t);
 
     }
     
