@@ -57,11 +57,11 @@ int main()
     // Loop through timesteps
     while(t < 200.0f) {
         // Apply some stimuli
-        if(t > 10.0f && t < 60.0f) {
+        if(t > 10.0f && t < 40.0f) {
             setRedInput(leftValue);
             setBlueInput(0.0f);
         }
-        else if(t > 70.0f && t < 120.0f) {
+        else if(t > 45.0f && t < 75.0f) {
             setRedInput(0.0f);
             setBlueInput(leftValue);
         }
