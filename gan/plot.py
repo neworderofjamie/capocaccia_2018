@@ -2,6 +2,12 @@ import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
+times = [10.0, 40.0, 45.0, 75.0]
+
+def plot_times(axis, times):
+    for t in times:
+        axis.axvline(t, linestyle="--")
+        
 with open("spikes.csv", "rb") as spike_csv_file, open("voltages.csv", "rb") as voltage_csv_file:
     spike_csv_reader = csv.reader(spike_csv_file, delimiter = ",")
     voltage_csv_reader = csv.reader(voltage_csv_file, delimiter = ",")
@@ -30,9 +36,11 @@ with open("spikes.csv", "rb") as spike_csv_file, open("voltages.csv", "rb") as v
     # Plot voltages
     for i in range(voltage.shape[1]):
         axes[0].plot(voltage_time[:,i], voltage[:,i], label="%u" % i)
+    plot_times(axes[0], times)
     
     # Plot spikes
     axes[1].scatter(spike_times, spike_id, s=2)
+    plot_times(axes[1], times)
     
     axes[1].set_ylim((0, 4))
     axes[0].set_ylabel("Membrane voltage [mV]")

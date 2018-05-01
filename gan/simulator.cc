@@ -10,24 +10,26 @@
 //----------------------------------------------------------------------------
 namespace
 {
+const float gScale = 2.0f;
+
 void setExcitatoryWeight(unsigned int preIdx, unsigned int postIdx, scalar weight)
 {
-    gExcitatorySyn[(preIdx * 4) + postIdx] = weight;
+    gExcitatorySyn[(preIdx * 4) + postIdx] = weight * gScale;
 }
 
 void setInhibitoryWeight(unsigned int preIdx, unsigned int postIdx, scalar weight)
 {
-    gInhibitorySyn[(preIdx * 4) + postIdx] = weight;
+    gInhibitorySyn[(preIdx * 4) + postIdx] = weight * gScale;
 }
 
 void setBlueInput(scalar value)
 {
-    iExtNeurons[0] = -7.13f * value * 0.003f * 100000.0f;
+    gExtInhibitorySyn[0] = -7.13f * value * 3.0f * gScale;
 }
 
 void setRedInput(scalar value)
 {
-    iExtNeurons[1] = 4.58f * value * 0.003f * 100000.0f;
+    gExtExcitatorySyn[1] = 4.58f * value * 3.0f * gScale;
 }
 }   // Anonymous namespace
 
