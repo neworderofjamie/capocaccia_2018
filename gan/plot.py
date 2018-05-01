@@ -2,7 +2,8 @@ import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
-times = [10.0, 40.0, 45.0, 75.0]
+times = [10.0, 40.0, 45.0, 75.0,
+         210.0, 240.0, 245.0, 275.0]
 
 def plot_times(axis, times):
     for t in times:

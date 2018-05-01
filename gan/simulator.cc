@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------
 namespace
 {
-const float gScale = 2.0f;
+const float gScale = 2.0;
 
 void setExcitatoryWeight(unsigned int preIdx, unsigned int postIdx, scalar weight)
 {
@@ -31,8 +31,9 @@ void setRedInput(scalar value)
 {
     gExtExcitatorySyn[1] = 4.58f * value * 3.0f * gScale;
 }
-}   // Anonymous namespace
-
+}   // Anonymous namespacesudo apt-get install libboost-all-dev
+// 0.0121 in
+//
 int main()
 {
     const scalar leftValue = 0.55f;
@@ -57,7 +58,7 @@ int main()
     AnalogueCSVRecorder<scalar> voltages("voltages.csv", VNeurons, 4, "Membrane voltage [mV]");
 
     // Loop through timesteps
-    while(t < 200.0f) {
+    while(t < 800.0f) {
         // Apply some stimuli
         if(t > 10.0f && t < 40.0f) {
             setRedInput(leftValue);
@@ -66,6 +67,31 @@ int main()
         else if(t > 45.0f && t < 75.0f) {
             setRedInput(0.0f);
             setBlueInput(leftValue);
+        }
+        else if(t > 210.0f && t < 240.0f) {
+            setRedInput(0.0f);
+            setBlueInput(leftValue);
+        }
+        else if(t > 245.0f && t < 275.0f) {
+            setRedInput(leftValue);
+            setBlueInput(0.0f);
+        }
+        // Apply some stimuli
+        else if(t > 410.0f && t < 440.0f) {
+            setRedInput(rightValue);
+            setBlueInput(0.0f);
+        }
+        else if(t > 445.0f && t < 475.0f) {
+            setRedInput(0.0f);
+            setBlueInput(rightValue);
+        }
+        else if(t > 610.0f && t < 640.0f) {
+            setRedInput(0.0f);
+            setBlueInput(rightValue);
+        }
+        else if(t > 645.0f && t < 675.0f) {
+            setRedInput(rightValue);
+            setBlueInput(0.0f);
         }
         else {
             setRedInput(0.0f);

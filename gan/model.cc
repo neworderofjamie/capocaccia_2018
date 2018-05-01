@@ -42,7 +42,7 @@ void modelDefinition(NNmodel &model)
                                        30.0,      // Adaption time constant
                                        2.0,       // Subthreshold adaption [nS]
                                        0.0,       // Spike-triggered adaptation [nA]
-                                       0.0);      // Offset current
+                                       200.0);      // Offset current
     
     AdExp::VarValues neuronInitVals(-70.0,    // 0 - V
                                     0.0);     // 1 - W
