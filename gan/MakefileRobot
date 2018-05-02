@@ -1,0 +1,7 @@
+EXECUTABLE      := simulator_robot
+SOURCES         := simulator_robot.cc simulator_common.cc
+CPU_ONLY        := 1
+LINK_FLAGS      := `pkg-config --libs opencv`
+CXXFLAGS        := `pkg-config --cflags opencv`
+
+include $(GENN_PATH)/userproject/include/makefile_common_gnu.mk

@@ -41,8 +41,8 @@ with open("spikes.csv", "rb") as spike_csv_file, open("voltages.csv", "rb") as v
     axes[1].scatter(spike_times, spike_id, s=2)
 
     # Plot stimuli
-    axes[2].plot(voltage_time[:,0], stim_1, label="Blue")
-    axes[2].plot(voltage_time[:,0], stim_2,"r", label="Red")
+    #axes[2].plot(voltage_time[:,0], stim_1, label="Blue")
+    #axes[2].plot(voltage_time[:,0], stim_2,"r", label="Red")
     
     axes[1].set_ylim((0, 5))
     axes[0].set_ylabel("Membrane voltage [mV]")
