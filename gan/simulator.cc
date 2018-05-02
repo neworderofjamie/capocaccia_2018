@@ -10,7 +10,17 @@
 //----------------------------------------------------------------------------
 namespace
 {
-const float gScale = 2.0;
+constexpr float gScale = 1.7f;
+constexpr float startTime = 10.0f;
+constexpr float stimDuration = 30.0f;
+constexpr float stimSpacing = 5.0f;
+constexpr float interStimTime = 100.0f;
+constexpr float experimentDuration = (stimDuration * 2.0f) + stimSpacing + interStimTime;
+
+constexpr float experiment1Start = startTime;
+constexpr float experiment2Start = experiment1Start + experimentDuration;
+constexpr float experiment3Start = experiment2Start + experimentDuration;
+constexpr float experiment4Start = experiment3Start + experimentDuration;
 
 void setExcitatoryWeight(unsigned int preIdx, unsigned int postIdx, scalar weight)
 {
@@ -31,14 +41,30 @@ void setRedInput(scalar value)
 {
     gExtExcitatorySyn[1] = 4.58f * value * 3.0f * gScale;
 }
-}   // Anonymous namespacesudo apt-get install libboost-all-dev
-// 0.0121 in
-//
+
+void applyExperimentStimuli(scalar t, scalar red1, scalar blue1, scalar red2, scalar blue2, scalar startTime)
+{
+    // If we're in experiment at all
+    if(t >= startTime && t < (startTime + experimentDuration)) {
+        // If we're in first stimuli of experiment
+        const scalar expT = t - startTime;
+        if(expT < stimDuration) {
+            setRedInput(red1);
+            setBlueInput(blue1);
+        }
+        else if(expT >= (stimDuration + stimSpacing) && expT < (stimDuration + stimDuration + stimSpacing)) {
+            setRedInput(red2);
+            setBlueInput(blue2);
+        }
+    }
+}
+}   // Anonymous namespace
+
 int main()
 {
     const scalar leftValue = 0.55f;
     const scalar rightValue = 0.45f;
-    
+   
     allocateMem();
     initialize();
   
@@ -57,46 +83,38 @@ int main()
     SpikeCSVRecorder spikes("spikes.csv", glbSpkCntNeurons, glbSpkNeurons);
     AnalogueCSVRecorder<scalar> voltages("voltages.csv", VNeurons, 4, "Membrane voltage [mV]");
 
+    std::ofstream stimuli("stim.csv");
+    
     // Loop through timesteps
     while(t < 800.0f) {
-        // Apply some stimuli
-        if(t > 10.0f && t < 40.0f) {
-            setRedInput(leftValue);
-            setBlueInput(0.0f);
-        }
-        else if(t > 45.0f && t < 75.0f) {
-            setRedInput(0.0f);
-            setBlueInput(leftValue);
-        }
-        else if(t > 210.0f && t < 240.0f) {
-            setRedInput(0.0f);
-            setBlueInput(leftValue);
-        }
-        else if(t > 245.0f && t < 275.0f) {
-            setRedInput(leftValue);
-            setBlueInput(0.0f);
-        }
-        // Apply some stimuli
-        else if(t > 410.0f && t < 440.0f) {
-            setRedInput(rightValue);
-            setBlueInput(0.0f);
-        }
-        else if(t > 445.0f && t < 475.0f) {
-            setRedInput(0.0f);
-            setBlueInput(rightValue);
-        }
-        else if(t > 610.0f && t < 640.0f) {
-            setRedInput(0.0f);
-            setBlueInput(rightValue);
-        }
-        else if(t > 645.0f && t < 675.0f) {
-            setRedInput(rightValue);
-            setBlueInput(0.0f);
-        }
-        else {
-            setRedInput(0.0f);
-            setBlueInput(0.0f);
-        }
+        setRedInput(0.0f);
+        setBlueInput(0.0f);
+            
+        // Red, Blue (left)
+        applyExperimentStimuli(t, 
+            leftValue, 0.0f, 
+            0.0f, leftValue,
+            experiment1Start);
+        
+        // Blue, Red (left)
+        applyExperimentStimuli(t, 
+            0.0f, leftValue,
+            leftValue, 0.0f, 
+            experiment2Start);
+        
+        // Red, Blue (left)
+        applyExperimentStimuli(t, 
+            rightValue, 0.0f, 
+            0.0f, rightValue,
+            experiment3Start);
+        
+        // Blue, Red (left)
+        applyExperimentStimuli(t, 
+            0.0f, rightValue,
+            rightValue, 0.0f, 
+            experiment4Start);
+        
+        stimuli << gExtInhibitorySyn[0] << ", " << gExtExcitatorySyn[1] << std::endl;
         
         // Simulate
         stepTimeCPU();
