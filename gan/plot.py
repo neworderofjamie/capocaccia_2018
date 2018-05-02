@@ -27,8 +27,8 @@ with open("spikes.csv", "rb") as spike_csv_file, open("voltages.csv", "rb") as v
     stim_2 = np.asarray(stim_data_columns[1], dtype=float)
     
     # Reshape voltage so it's one column per neuron
-    voltage_time = voltage_time.reshape((-1, 4))
-    voltage = voltage.reshape((-1, 4))
+    voltage_time = voltage_time.reshape((-1, 5))
+    voltage = voltage.reshape((-1, 5))
     
     # Create plot
     figure, axes = plt.subplots(3, sharex=True)
@@ -42,9 +42,9 @@ with open("spikes.csv", "rb") as spike_csv_file, open("voltages.csv", "rb") as v
 
     # Plot stimuli
     axes[2].plot(voltage_time[:,0], stim_1, label="Blue")
-    axes[2].plot(voltage_time[:,0], stim_2, label="Red")
+    axes[2].plot(voltage_time[:,0], stim_2,"r", label="Red")
     
-    axes[1].set_ylim((0, 4))
+    axes[1].set_ylim((0, 5))
     axes[0].set_ylabel("Membrane voltage [mV]")
     axes[1].set_xlabel("Time [ms]")
     axes[1].set_ylabel("Neuron ID")

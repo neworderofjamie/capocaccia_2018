@@ -42,7 +42,7 @@ void modelDefinition(NNmodel &model)
                                        30.0,      // Adaption time constant
                                        2.0,       // Subthreshold adaption [nS]
                                        0.0,       // Spike-triggered adaptation [nA]
-                                       200.0);      // Offset current
+                                       0.0);      // Offset current
     
     AdExp::VarValues neuronInitVals(-70.0,    // 0 - V
                                     0.0);     // 1 - W
@@ -60,7 +60,7 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Parameters
     //---------------------------------------------------------------------------
-    model.addNeuronPopulation<AdExp>("Neurons", 4, neuronParamVals, neuronInitVals);
+    model.addNeuronPopulation<AdExp>("Neurons", 5, neuronParamVals, neuronInitVals); //number of neurons in the network
     
     model.addSynapsePopulation<WeightUpdateModels::StaticPulse, ExpCondExtCond>("ExcitatorySyn", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY, 
                                                                                 "Neurons", "Neurons",
