@@ -4,6 +4,14 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+namespace
+{
+// Minimum frames of same 
+constexpr unsigned int minPatternColourFrames = 10;
+constexpr unsigned int minIntervalFrames = 4;
+constexpr int minPatternColourLevel = 30000000;
+}
+
 int main(int argc, char *argv[])
 {
     const unsigned int device = (argc > 1) ? std::atoi(argv[1]) : 0;
@@ -31,7 +39,20 @@ int main(int argc, char *argv[])
     cv::Mat rColumns(1, camRes.width, CV_32SC1);
     cv::Mat bColumns(1, camRes.width, CV_32SC1);
     
-    while(true) {
+    enum class State
+    {
+        None,
+        FirstStimuli,
+        Interval,
+        SecondStimuli,
+    };
+    
+    State state = State::None;
+    int currentStimuliIndex = -1;
+    int currentStimuliSide = -1;
+    unsigned int stateStartTime = 0;
+    for(unsigned int t = 0;; t++) {
+        // Capture frame
         if(!capture.read(rgbInput)) {
             return EXIT_FAILURE;
         }
@@ -56,11 +77,75 @@ int main(int argc, char *argv[])
             std::accumulate(&rColumnsRaw[camRes.width / 2], &rColumnsRaw[camRes.width], 0) };
         
         // Find the largest sum
-        const int maxSum = std::max_element(&sums[0], &sums[4]) - &sums[0];
-        const auto maxSumDiv = std::div(maxSum, 2);
+        const int maxSumIndex = std::max_element(&sums[0], &sums[4]) - &sums[0];
+        const auto maxSumIndexDiv = std::div(maxSumIndex, 2);
         
-        std::cout << ((maxSumDiv.quot == 0) ? "Blue" : "Red");
-        std::cout << " " << ((maxSumDiv.rem == 0) ? "Left" : "Right") << std::endl;
+        // If a colour is presented
+        if(sums[maxSumIndex] > minPatternColourLevel) {
+            // If we're waiting for a stimuli
+            if(state == State::None) {
+                std::cout << "Start pattern:" <<  ((maxSumIndexDiv.quot == 0) ? "Blue" : "Red");
+                std::cout << " " << ((maxSumIndexDiv.rem == 0) ? "Left" : "Right") << std::endl;
+                
+                stateStartTime = t;
+                currentStimuliIndex = maxSumIndexDiv.quot;
+                currentStimuliSide = maxSumIndexDiv.rem;
+                state = State::FirstStimuli;
+            }
+            // If we're receiving a stimuli
+            else if(state == State::FirstStimuli || state == State::SecondStimuli) {
+                // If stimuli colour has changed
+                if(currentStimuliIndex != maxSumIndexDiv.quot) {
+                    std::cout << "\tColour changed - invalid pattern" << std::endl;
+                    state = State::None;
+                }
+                else if(currentStimuliSide != maxSumIndexDiv.rem) {
+                    std::cout << "\tSide changed - invalid pattern" << std::endl;
+                    state = State::None;
+                }
+            }
+            else if(state == State::Interval) {
+                // If more than minimum interval frames has elapsed, enter second stimuli
+                if((t - stateStartTime) > minPatternColourFrames) {
+                    if(currentStimuliSide != maxSumIndexDiv.rem) {
+                        std::cout << "\tSide changed - invalid pattern" << std::endl;
+                        state = State::None;
+                    }
+                    else {
+                        std::cout << "\tSecond stimuli:" <<  ((maxSumIndexDiv.quot == 0) ? "Blue" : "Red") << std::endl;
+                        stateStartTime = t;
+                        currentStimuliIndex = maxSumIndexDiv.quot;
+                        state = State::SecondStimuli;
+                    }
+                }
+                else {
+                    std::cout << "\tInterval too short - invalid pattern" << std::endl;
+                    state = State::None;
+                }
+            }
+        }
+        // Otherwise, if blank is presented
+        else {
+            // If we're receiving a stimuli
+            if(state == State::FirstStimuli || state == State::SecondStimuli) {
+                // If more than minimum pattern frames has elapsed, enter interval
+                if((t - stateStartTime) > minPatternColourFrames) {                    
+                    if(state == State::FirstStimuli) {
+                        std::cout << "\tInterval!" << std::endl;
+                        stateStartTime = t;
+                        state = State::Interval;
+                    }
+                    else {
+                        std::cout << "\tPattern complete!" << std::endl;
+                        state = State::None;
+                    }
+                }
+                else {
+                    std::cout << "\tStimuli too short - invalid pattern" << std::endl;
+                    state = State::None;
+                }
+            }
+        }
         
         // Show original view
         cv::imshow("View", rgbInput);
