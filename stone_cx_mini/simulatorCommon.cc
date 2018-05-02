@@ -39,29 +39,13 @@ void buildTBToCPUConnector(unsigned int numPre, unsigned int numPost,
 }
 }   // Anonymous namespace
 
-void buildConnectivity()
+void buildConnectivity(const double *preferredAngleTB)
 {
-    // TL_CL1
-    buildOneToOneConnector(Parameters::numTL, Parameters::numCL1,
-                           CTL_CL1, allocateTL_CL1);
-
-    std::cout << "TL->CL1" << std::endl;
-    printSparseMatrix(Parameters::numTL, CTL_CL1);
-
-    // CL1_TB1
-    allocateCL1_TB1(Parameters::numCL1);
-    std::iota(&CCL1_TB1.indInG[0], &CCL1_TB1.indInG[Parameters::numCL1 + 1], 0);
-    for(unsigned int i = 0; i < Parameters::numCL1; i++) {
-        CCL1_TB1.ind[i] = i % 4;
-    }
-    std::cout << std::endl << "CL1->TB1" << std::endl;
-    printSparseMatrix(Parameters::numCL1, CCL1_TB1);
-
     // TB1_TB1
     for(unsigned int i = 0; i < Parameters::numTB1; i++) {
         for(unsigned int j = 0; j < Parameters::numTB1; j++) {
-            const double preferredI = preferredAngleTL[i];
-            const double preferredJ = preferredAngleTL[j];
+            const double preferredI = preferredAngleTB[i];
+            const double preferredJ = preferredAngleTB[j];
 
             const double w = (cos(preferredI - preferredJ) - 1.0);
             gTB1_TB1[(i * Parameters::numTB1) + j] = Parameters::c * w;

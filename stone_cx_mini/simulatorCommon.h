@@ -1,4 +1,4 @@
 #pragma once
 
 // Functions
-void buildConnectivity();
+void buildConnectivity(const double *preferredAngleTB);

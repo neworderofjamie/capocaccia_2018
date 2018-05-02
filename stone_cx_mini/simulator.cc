@@ -85,9 +85,10 @@ int main()
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;
     const unsigned int activityImageWidth = 500;
-    const unsigned int activityImageHeight = 1000;
+    const unsigned int activityImageHeight = 500;
     
-    const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
+    const double preferredAngleTN2[] = { Parameters::pi * 0.25, -Parameters::pi * 0.25 };
+    const double preferredAngleTB1[] = { 0.0, Parameters::pi * 0.5, Parameters::pi, Parameters::pi * 1.5 };
     
     // Outbound path generation parameters
     const unsigned int numOutwardTimesteps = 1500;
@@ -107,17 +108,9 @@ int main()
     initialize();
 
     //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 4; i++) {
-        preferredAngleTL[i] = preferredAngleTL[4 + i] = (Parameters::pi / 2.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
     // Build connectivity
     //---------------------------------------------------------------------------
-    buildConnectivity();
+    buildConnectivity(preferredAngleTB1);
 
     initstone_cx();
 
@@ -185,8 +178,12 @@ int main()
                 (cos(theta + preferredAngleTN2[j]) * yVelocity);
         }
 
-        // Update TL input
-        headingAngleTL = theta;
+        // Calculate TB input
+        for(unsigned int j = 0; j < Parameters::numTB1; j++) {
+            const double iTL = cos(preferredAngleTB1[j] - theta);
+            const double iCL = -1.0 / (1.0 + exp(-((6.8 * iTL) - 3.0)));
+            iDirTB1[j] = 1.0 / (1.0 + exp(-((3.0 * iCL) + 0.5)));
+        }
 
         // Step network
         stepTimeCPU();
@@ -200,21 +197,17 @@ int main()
 #endif  // RECORD_ELECTROPHYS
 
         // Draw compass system activity
-        drawPopulationActivity(rTL, Parameters::numTL, "TL", cv::Point(10, 10),
-                               getReds, activityImage, 4);
-        drawPopulationActivity(rCL1, Parameters::numCL1, "CL1", cv::Point(10, 110),
-                               getReds, activityImage, 4);
-        drawPopulationActivity(rTB1, Parameters::numTB1, "TB1", cv::Point(10, 210),
+        drawPopulationActivity(rTB1, Parameters::numTB1, "TB1", cv::Point(10, 10),
                                getReds, activityImage);
 
-        drawPopulationActivity(rTN2, Parameters::numTN2, "TN2", cv::Point(300, 310),
+        drawPopulationActivity(rTN2, Parameters::numTN2, "TN2", cv::Point(300, 110),
                                getBlues, activityImage, 1);
 
-        drawPopulationActivity(rCPU4, Parameters::numCPU4, "CPU4", cv::Point(10, 310),
+        drawPopulationActivity(rCPU4, Parameters::numCPU4, "CPU4", cv::Point(10, 110),
                                getGreens, activityImage, 4);
-        drawPopulationActivity(rPontine, Parameters::numPontine, "Pontine", cv::Point(10, 410),
+        drawPopulationActivity(rPontine, Parameters::numPontine, "Pontine", cv::Point(10, 210),
                                getGreens, activityImage, 4);
-        drawPopulationActivity(rCPU1, Parameters::numCPU1, "CPU1", cv::Point(10, 510),
+        drawPopulationActivity(rCPU1, Parameters::numCPU1, "CPU1", cv::Point(10, 310),
                                getGreens, activityImage, 4);
 
         // If we are on outbound segment of route

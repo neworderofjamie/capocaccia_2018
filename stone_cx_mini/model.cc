@@ -39,17 +39,14 @@ public:
 };
 IMPLEMENT_MODEL(TN2Linear);
 
-//---------------------------------------------------------------------------
-// TLSigmoid
-//---------------------------------------------------------------------------
-class TLSigmoid : public NeuronModels::Base
+//! Non-spiking sigmoid unit
+class TBSigmoid : public NeuronModels::Base
 {
 public:
-    DECLARE_MODEL(TLSigmoid, 2, 2);
+    DECLARE_MODEL(TBSigmoid, 2, 2);
 
     SET_SIM_CODE(
-        "const scalar iTL = cos($(preferredAngle) - $(headingAngle));\n"
-        "$(r) = 1.0 / (1.0 + exp(-(($(a) * iTL) - $(b))));\n"
+        "$(r) = 1.0 / (1.0 + exp(-(($(a) * ($(iDir) + $(Isyn))) - $(b))));\n"
     );
 
     SET_PARAM_NAMES({
@@ -57,11 +54,9 @@ public:
         "b"});      // Additive scale
 
     SET_VARS({{"r", "scalar"},
-              {"preferredAngle", "scalar"}});
-
-    SET_EXTRA_GLOBAL_PARAMS({{"headingAngle", "scalar"}});
+              {"iDir", "scalar"}});
 };
-IMPLEMENT_MODEL(TLSigmoid);
+IMPLEMENT_MODEL(TBSigmoid);
 
 //----------------------------------------------------------------------------
 // CPU4Sigmoid
@@ -106,24 +101,14 @@ void modelDefinition(NNmodel &model)
         0.0,    // r
         0.0);   // speed
 
-    // TL
-    TLSigmoid::ParamValues tlParams(
-        6.8,    // Multiplicative scale
-        3.0);   // Additive scale
-
-    TLSigmoid::VarValues tlInit(
-        0.0,    // r
-        0.0);   // Preference angle (radians)
-
-    // CL1
-    Sigmoid::ParamValues cl1Params(
-        3.0,     // Multiplicative scale
-        -0.5);   // Additive scale
-
     // TB1
-    Sigmoid::ParamValues tb1Params(
+    TBSigmoid::ParamValues tb1Params(
         5.0,    // Multiplicative scale
         0.0);   // Additive scale
+    
+    TBSigmoid::VarValues tb1Init(
+        0.0,    // r
+        0.0);   // iDir
 
     // CPU4
     CPU4Sigmoid::ParamValues cpu4Params(
@@ -161,9 +146,7 @@ void modelDefinition(NNmodel &model)
     // Neuron populations
     //---------------------------------------------------------------------------
     model.addNeuronPopulation<TN2Linear>("TN2", Parameters::numTN2, {}, tn2Init);
-    model.addNeuronPopulation<TLSigmoid>("TL", Parameters::numTL, tlParams, tlInit);
-    model.addNeuronPopulation<Sigmoid>("CL1", Parameters::numCL1, cl1Params, sigmoidInit);
-    model.addNeuronPopulation<Sigmoid>("TB1", Parameters::numTB1, tb1Params, sigmoidInit);
+    model.addNeuronPopulation<TBSigmoid>("TB1", Parameters::numTB1, tb1Params, tb1Init);
     model.addNeuronPopulation<CPU4Sigmoid>("CPU4", Parameters::numCPU4, cpu4Params, cpu4Init);
     model.addNeuronPopulation<Sigmoid>("Pontine", Parameters::numPontine, pontineParams, sigmoidInit);
     model.addNeuronPopulation<Sigmoid>("CPU1", Parameters::numCPU1, cpu1Params, sigmoidInit);
@@ -171,18 +154,6 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Synapse populations
     //---------------------------------------------------------------------------
-    model.addSynapsePopulation<Continuous, PostsynapticModels::DeltaCurr>(
-        "TL_CL1", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
-        "TL", "CL1",
-        {}, continuousInhInit,
-        {}, {});
-
-    model.addSynapsePopulation<Continuous, PostsynapticModels::DeltaCurr>(
-        "CL1_TB1", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
-        "CL1", "TB1",
-        {}, cl1TB1Init,
-        {}, {});
-
     model.addSynapsePopulation<Continuous, PostsynapticModels::DeltaCurr>(
         "TB1_TB1", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY,
         "TB1", "TB1",
